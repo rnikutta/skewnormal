@@ -7,7 +7,7 @@ skewnormal
 
 **License:** BSD 3-clause, please see [LICENSE](./LICENSE) file
 
-<img src="./skewnormal.png" alt="image" style="width:400">
+<img src="./skewnormal.png" alt="image" style="width:400px">
 
 Estimate the free parameters (mu,sigma,alpha) of a Skew-Normal PDF
 when only the location and (possibly asymmetric) spread of a sample
