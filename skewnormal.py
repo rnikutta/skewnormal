@@ -5,12 +5,14 @@ knowing only its measured median and (asymmetric) spread.
 
 Includes all required helper functions, e.g. Owen's T function.
 
-See docstring of classes and funcs for usage. Run plot_skewnorm() to
-see an example of how it all works (it generates a PDF figure).
+See docstring of classes and funcs for usage. See example.py file and
+run plot_skewnorm() there to see an example of how it all works (it
+generates a PDF figure).
+
 """
 
 __author__ = "Robert Nikutta <robert.nikutta@gmail.com"
-__version__ = "2014-08-19"
+__version__ = "2015-04-18"
 
 import numpy as N
 from scipy.special import erf, erfc
@@ -347,4 +349,3 @@ def plot_skewnorm(mid=2.,dl=0.7,dr=1.2,samplesize=1e5,pdffile='skewnormal.pdf'):
     print "Saving figure to PDF file", pdffile
     p.savefig(pdffile)
 #    p.savefig("skewnormal.png",dpi=200)
-    
