@@ -5,12 +5,12 @@ To run this example:
 $ipython
  In[1]: import example, skewnormal
  In[2]: mu, sig, alpha, sample, dist = example.plot_skewnorm()  # estimated free params, 1e5 sample, sampling object
- In[3]: sample = skewnormal.get_sample(dist,1e4) # draw a new sample of 1e4 variates from the estimated skew-normal PDF
+ In[3]: sample = dist.random() # draw a new sample of 1e5 variates from the estimated skew-normal PDF
 
 """
 
 __author__ = "Robert Nikutta <robert.nikutta@gmail.com"
-__version__ = "2015-04-18"
+__version__ = "2015-06-26"
 
 import numpy as N
 import pylab as p
@@ -20,10 +20,9 @@ import skewnormal
 # show how it all works
 def plot_skewnorm(mid=2.,dl=0.7,dr=1.2,samplesize=1e5,pdffile='skewnormal.pdf'):
 
-
     # find params of our skew normal; get a sample for histogram
-    mu,sig,alpha,dist = skewnormal.get_skewnormal_parameters(mid,dl,dr,fraction=0.9,returndist=True)
-    sample = skewnormal.get_sample(dist,samplesize)
+    mu,sig,alpha,dist = skewnormal.get_skewnormal_parameters(mid,dl,dr,fraction=0.9,returndist=True,size=samplesize)
+    sample = dist.random()
 
     # PyMC SkewNormal; for plotting PDF and CDF
     sn = skewnormal.SkewNormal(mu,sig,alpha)
