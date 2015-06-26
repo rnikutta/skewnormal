@@ -3,7 +3,7 @@ skewnormal
 
 **Author:** Robert Nikutta
 
-**Version:** 2015-04-18
+**Version:** 2015-06-24
 
 **License:** BSD 3-clause, please see [LICENSE](./LICENSE) file
 
