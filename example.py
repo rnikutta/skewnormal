@@ -1,109 +1,124 @@
-"""This is part if the skewnormal software.
+"""Worked example of the skewnormal package.
 
-To run this example:
+Estimate the skew-normal parameters from a (median, dL, dR, fraction)
+input, draw a sample from the fitted PDF, and plot the CDF, PDF and a
+normalised histogram of the sample.
 
-$ipython
- In[1]: import example, skewnormal
- In[2]: mu, sig, alpha, sample, dist = example.plot_skewnorm()  # estimated free params, 1e5 sample, sampling object
- In[3]: sample = dist.random() # draw a new sample of 1e5 variates from the estimated skew-normal PDF
+Run from the command line:
 
+    $ python3 example.py
+
+or import and call interactively:
+
+    >>> from example import plot_skewnorm
+    >>> mu, sigma, alpha, sample = plot_skewnorm()
 """
 
-__author__ = "Robert Nikutta <robert.nikutta@gmail.com"
-__version__ = "2015-06-26"
+__author__ = "Robert Nikutta <robert.nikutta@gmail.com>"
+__version__ = "2026.05"
 
-import numpy as N
-import pylab as p
-from matplotlib.ticker import MaxNLocator
+import numpy as np
+import matplotlib.pyplot as plt
 import skewnormal
 
-# show how it all works
-def plot_skewnorm(mid=2.,dl=0.7,dr=1.2,samplesize=1e5,pdffile='skewnormal.pdf'):
 
-    # find params of our skew normal; get a sample for histogram
-    mu,sig,alpha,dist = skewnormal.get_skewnormal_parameters(mid,dl,dr,fraction=0.9,returndist=True,size=samplesize)
-    sample = dist.random()
+def plot_skewnorm(mid=2.0, dl=0.7, dr=1.2,
+                  samplesize=100_000,
+                  pdffile='skewnormal.pdf',
+                  pngfile='skewnormal.png'):
+    """Fit a skew-normal to ``mid +dr/-dl`` at the 90% interval, plot,
+    save figures, and return the fit + sample."""
 
-    # PyMC SkewNormal; for plotting PDF and CDF
-    sn = skewnormal.SkewNormal(mu,sig,alpha)
-    x = N.linspace(0,5,100)
+    # Find parameters of the skew-normal matching the input statistics
+    mu, sigma, alpha = skewnormal.get_skewnormal_parameters(
+        mid, dl, dr, fraction=0.9)
+
+    # SkewNormal object: provides .pdf, .cdf, .rvs
+    sn = skewnormal.SkewNormal(mu, sigma, alpha)
+    sample = sn.rvs(size=int(samplesize))
+
+    x = np.linspace(0, 5, 200)
     pdf = sn.pdf(x)
     cdf = sn.cdf(x)
 
-    # left and right ranges
-    xl = mid - dl
-    xr = mid + dr
+    # Bounds of the 90% interval
+    xl, xr = mid - dl, mid + dr
 
-    # convert fraction to known locations of the CDF
+    # Convert fraction to known locations on the CDF
     prob_frac = 0.9
-    Phixl = skewnormal.get_tail(prob_frac,mode='fraction')
-    Phixr = 1-Phixl
+    Phixl = skewnormal.get_tail(prob_frac, mode='fraction')
+    Phixr = 1.0 - Phixl
 
-    # Set up figure
-    print "Plotting..."
+    # Figure styling
+    print("Plotting...")
     fontsize = 11
-    fig_size = (5,3.5)
-    p.rcParams['font.family'] = 'sans-serif'
-    p.rcParams['figure.figsize'] = fig_size # #fig_size
-    p.rcParams['axes.labelsize'] = fontsize
-    p.rcParams['axes.linewidth'] = 1.
-    p.rcParams['axes.titlesize'] = fontsize
-    p.rcParams['font.size'] = fontsize
-    p.rcParams['legend.fontsize'] = fontsize-1
-    p.rcParams['xtick.labelsize'] = fontsize
-    p.rcParams['ytick.labelsize'] = fontsize
-    p.rcParams['xtick.major.size'] = 3      # major tick size in points
-    p.rcParams['xtick.minor.size'] = 1.5      # major tick size in points
-    p.rcParams['ytick.major.size'] = 3      # major tick size in points
-    p.rcParams['ytick.minor.size'] = 1.5      # major tick size in points
+    plt.rcParams.update({
+        'font.family':       'sans-serif',
+        'figure.figsize':    (5, 3.5),
+        'axes.labelsize':    fontsize,
+        'axes.linewidth':    1.0,
+        'axes.titlesize':    fontsize,
+        'font.size':         fontsize,
+        'legend.fontsize':   fontsize - 1,
+        'xtick.labelsize':   fontsize,
+        'ytick.labelsize':   fontsize,
+        'xtick.major.size':  3,
+        'xtick.minor.size':  1.5,
+        'ytick.major.size':  3,
+        'ytick.minor.size':  1.5,
+        # don't use Type-3 fonts (e.g. MNRAS doesn't allow them)
+        'ps.useafm':         True,
+        'pdf.use14corefonts': True,
+    })
 
-    # don't use Type 3 fonts (e.g. MNRAS doesn't allow them)
-    p.rcParams['ps.useafm'] = True
-    p.rcParams['pdf.use14corefonts'] = True
-    p.rcParams['text.usetex'] = True
-    p.rcParams['font.family'] = 'sans-serif'
+    fig, ax = plt.subplots()
 
-    # Plot
-    fig = p.figure()
-    ax = fig.add_subplot(111)
-
-    # grid of x.y points on the CDF
+    # Grid of x,y reference lines on the CDF
     ls, lw, color = ':', 1, '0.2'
-    ax.axvline(xl,ls=ls,lw=lw,color=color)
-    ax.axvline(xr,ls=ls,lw=lw,color=color)
-    ax.axhline(Phixl,ls=ls,lw=lw,color=color)
-    ax.axhline(Phixr,ls=ls,lw=lw,color=color)
-    ax.axvline(mid,ls=ls,lw=lw,color=color)
-    ax.axhline(0.5,ls=ls,lw=lw,color=color)
+    for xv in (xl, mid, xr):
+        ax.axvline(xv, ls=ls, lw=lw, color=color)
+    for yv in (Phixl, 0.5, Phixr):
+        ax.axhline(yv, ls=ls, lw=lw, color=color)
 
-    # the three known points on the CDF
-    ax.plot((xl,mid,xr),(Phixl,0.5,Phixr),ls='none',marker='o',mec='k',mfc='none',mew=1.5,ms=7,label=r'known points on CDF',zorder=1)
+    # The three known points on the CDF
+    ax.plot((xl, mid, xr), (Phixl, 0.5, Phixr),
+            ls='none', marker='o', mec='k', mfc='none', mew=1.5, ms=7,
+            label='known points on CDF', zorder=1)
 
-    # PDF and CDF
-    ax.plot(x,cdf,ls='-',color='b',lw=2,label=r'fitted CDF \Phi(x|\mu,\sigma,\alpha)$',zorder=0)
-    ax.plot(x,pdf,'r-',lw=2,label=r'its PDF $\phi(x|\mu,\sigma,\alpha)$',zorder=0)
+    # PDF and CDF curves
+    ax.plot(x, cdf, ls='-', color='b', lw=2,
+            label=r'fitted CDF $\Phi(x|\mu,\sigma,\alpha)$', zorder=0)
+    ax.plot(x, pdf, 'r-', lw=2,
+            label=r'its PDF $\phi(x|\mu,\sigma,\alpha)$', zorder=0)
 
-    # histogram of drawn sample
-    ax.hist(sample,bins=50,histtype='stepfilled',color='0.2',ec='k',alpha=0.15,normed=True,label=r'$10^5$ sample from $\phi(x)$')
+    # Histogram of drawn sample (matplotlib 3.x: density= replaces normed=)
+    ax.hist(sample, bins=50, histtype='stepfilled',
+            color='0.2', ec='k', alpha=0.15, density=True,
+            label=fr'${int(samplesize):,}$ sample from $\phi(x)$')
 
-    # legend
-    leg = p.legend(loc='center right',frameon=1)
+    leg = ax.legend(loc='center right', frameon=True)
     leg.get_frame().set_facecolor('w')
-    leg.get_frame().set_edgecolor('w')  #A6DAFF
+    leg.get_frame().set_edgecolor('w')
     leg.get_frame().set_alpha(0.7)
 
-    # limits, labels
-    ax.set_xlim(mid-3*dl,mid+3*dr)
-    ax.set_ylim(0,1)
+    ax.set_xlim(mid - 3 * dl, mid + 3 * dr)
+    ax.set_ylim(0, 1)
     ax.set_xlabel('x')
     ax.set_ylabel('PDF, CDF')
 
-    # margin adjustments
-    p.subplots_adjust(left=0.1,right=0.98,bottom=0.12,top=0.97)
+    plt.subplots_adjust(left=0.1, right=0.98, bottom=0.12, top=0.97)
 
-    # save figure
-    print "Saving figure to PDF file", pdffile
-    p.savefig(pdffile)
-#    p.savefig("skewnormal.png",dpi=200)
-    
-    return mu, sig, alpha, sample, dist
+    if pdffile:
+        print(f"Saving PDF figure to {pdffile}")
+        plt.savefig(pdffile)
+    if pngfile:
+        print(f"Saving PNG figure to {pngfile}")
+        plt.savefig(pngfile, dpi=200)
+
+    return mu, sigma, alpha, sample
+
+
+if __name__ == "__main__":
+    mu, sigma, alpha, sample = plot_skewnorm()
+    print(f"Fitted: mu={mu:.4f}, sigma={sigma:.4f}, alpha={alpha:.4f}")
+    print(f"Sample size: {len(sample)}; median={np.median(sample):.3f}")
