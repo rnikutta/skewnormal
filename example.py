@@ -94,7 +94,7 @@ def plot_skewnorm(mid=2.0, dl=0.7, dr=1.2,
     # Histogram of drawn sample (matplotlib 3.x: density= replaces normed=)
     ax.hist(sample, bins=50, histtype='stepfilled',
             color='0.2', ec='k', alpha=0.15, density=True,
-            label=fr'${int(samplesize):,}$ sample from $\phi(x)$')
+            label=r'$10^5$ sample from $\phi(x)$')
 
     leg = ax.legend(loc='center right', frameon=True)
     leg.get_frame().set_facecolor('w')
@@ -107,6 +107,7 @@ def plot_skewnorm(mid=2.0, dl=0.7, dr=1.2,
     ax.set_ylabel('PDF, CDF')
 
     plt.subplots_adjust(left=0.1, right=0.98, bottom=0.12, top=0.97)
+    plt.tight_layout()
 
     if pdffile:
         print(f"Saving PDF figure to {pdffile}")
